@@ -1,38 +1,44 @@
+using System.Reflection.Metadata.Ecma335;
 using CarBuilder.Models;
+using CarBuilder.Models.DTOs;
 
 List<PaintColor> paintColors = new List<PaintColor>
-        {
-            new PaintColor { Id = 1, Price = 200m, Color = "Silver" },
-            new PaintColor { Id = 2, Price = 250m, Color = "Midnight Blue" },
-            new PaintColor { Id = 3, Price = 300m, Color = "Firebrick Red" },
-            new PaintColor { Id = 4, Price = 150m, Color = "Spring Green" }
-        };
+{
+    new PaintColor { Id = 1, Price = 200m, Color = "Silver" },
+    new PaintColor { Id = 2, Price = 250m, Color = "Midnight Blue" },
+    new PaintColor { Id = 3, Price = 300m, Color = "Firebrick Red" },
+    new PaintColor { Id = 4, Price = 150m, Color = "Spring Green" }
+};
 
 List<Interior> interiors = new List<Interior>
-        {
-            new Interior { Id = 1, Price = 500m, Material = "Beige Fabric" },
-            new Interior { Id = 2, Price = 550m, Material = "Charcoal Fabric" },
-            new Interior { Id = 3, Price = 800m, Material = "White Leather" },
-            new Interior { Id = 4, Price = 850m, Material = "Black Leather" }
-        };
+{
+    new Interior { Id = 1, Price = 500m, Material = "Beige Fabric" },
+    new Interior { Id = 2, Price = 550m, Material = "Charcoal Fabric" },
+    new Interior { Id = 3, Price = 800m, Material = "White Leather" },
+    new Interior { Id = 4, Price = 850m, Material = "Black Leather" }
+};
 
 List<Technology> technologies = new List<Technology>
-        {
-            new Technology { Id = 1, Price = 1000m, Package = "Basic Package (basic sound system)" },
-            new Technology { Id = 2, Price = 1500m, Package = "Navigation Package (includes integrated navigation controls)" },
-            new Technology { Id = 3, Price = 1200m, Package = "Visibility Package (includes side and rear cameras)" },
-            new Technology { Id = 4, Price = 2000m, Package = "Ultra Package (includes navigation and visibility packages)" }
-        };
+{
+    new Technology { Id = 1, Price = 1000m, Package = "Basic Package (basic sound system)" },
+    new Technology { Id = 2, Price = 1500m, Package = "Navigation Package (includes integrated navigation controls)" },
+    new Technology { Id = 3, Price = 1200m, Package = "Visibility Package (includes side and rear cameras)" },
+    new Technology { Id = 4, Price = 2000m, Package = "Ultra Package (includes navigation and visibility packages)" }
+};
 
 List<Wheels> wheels = new List<Wheels>
-        {
-            new Wheels { Id = 1, Price = 400m, Style = "17-inch Pair Radial" },
-            new Wheels { Id = 2, Price = 450m, Style = "17-inch Pair Radial Black" },
-            new Wheels { Id = 3, Price = 500m, Style = "18-inch Pair Spoke Silver" },
-            new Wheels { Id = 4, Price = 550m, Style = "18-inch Pair Spoke Black" }
-        };
+{
+    new Wheels { Id = 1, Price = 400m, Style = "17-inch Pair Radial" },
+    new Wheels { Id = 2, Price = 450m, Style = "17-inch Pair Radial Black" },
+    new Wheels { Id = 3, Price = 500m, Style = "18-inch Pair Spoke Silver" },
+    new Wheels { Id = 4, Price = 550m, Style = "18-inch Pair Spoke Black" }
+};
 
-List<Order> orders = new List<Order>();
+List<Order> orders = new List<Order>
+{
+   new Order { Id = 1, Timestamp = DateTime.Now, WheelId = 1, TechnologyId = 2, PaintId = 3, InteriorId = 1}
+};
+
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -53,6 +59,91 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.MapGet("/paintcolors", () => 
+{
+    return paintColors.Select(p => new PaintColorDTO
+    {
+        Id = p.Id,
+        Price = p.Price,
+        Color = p.Color
+    });
+});
 
+app.MapGet("/interiors", () => 
+{
+    return interiors.Select(i => new InteriorDTO
+    {
+        Id = i.Id,
+        Price = i.Price,
+        Material = i.Material
+    });
+});
+
+app.MapGet("/technologies", () => 
+{
+    return technologies.Select(t => new TechnologyDTO
+    {
+        Id = t.Id,
+        Price = t.Price,
+        Package = t.Package
+    });
+});
+
+app.MapGet("/wheels", () => 
+{
+    return wheels.Select(w => new WheelsDTO 
+    {
+        Id = w.Id,
+        Price = w.Price,
+        Style = w.Style
+    });
+});
+
+app.MapGet("/orders", () => 
+{
+    List<OrderDTO> orderDTOs = orders.Select(o => 
+    {
+        Wheels wheel = wheels.FirstOrDefault(w => w.Id == o.WheelId);
+        Technology technology = technologies.FirstOrDefault(t => t.Id == o.TechnologyId);
+        PaintColor paint = paintColors.FirstOrDefault(p => p.Id == o.PaintId);
+        Interior interior = interiors.FirstOrDefault(i => i.Id == o.InteriorId);
+        
+        return new OrderDTO
+        {
+            Id = o.Id,
+            Timestamp = o.Timestamp,
+            WheelId = o.WheelId,
+            Wheels = wheel != null ? new WheelsDTO
+            {
+                Id = wheel.Id,
+                Price = wheel.Price,
+                Style = wheel.Style
+            } : null,
+            TechnologyId = o.TechnologyId,
+            Technology = technology != null ? new TechnologyDTO
+            {
+                Id = technology.Id,
+                Price = technology.Price,
+                Package = technology.Package
+            } : null,
+            PaintId = o.PaintId,
+            Paint = paint != null ? new PaintColorDTO
+            {
+                Id = paint.Id,
+                Price = paint.Price,
+                Color = paint.Color
+            } : null,
+            InteriorId = o.InteriorId,
+            Interior = interior != null ? new InteriorDTO
+            {
+                Id = interior.Id,
+                Price = interior.Price,
+                Material = interior.Material
+            } : null
+        };
+    }).ToList();
+
+    return orderDTOs;
+});
 
 app.Run();
