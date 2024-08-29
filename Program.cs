@@ -1,4 +1,3 @@
-using System.Reflection.Metadata.Ecma335;
 using CarBuilder.Models;
 using CarBuilder.Models.DTOs;
 
@@ -113,37 +112,103 @@ app.MapGet("/orders", () =>
             Id = o.Id,
             Timestamp = o.Timestamp,
             WheelId = o.WheelId,
-            Wheels = wheel != null ? new WheelsDTO
+            Wheels = new WheelsDTO
             {
                 Id = wheel.Id,
                 Price = wheel.Price,
                 Style = wheel.Style
-            } : null,
+            },
             TechnologyId = o.TechnologyId,
-            Technology = technology != null ? new TechnologyDTO
+            Technology = new TechnologyDTO
             {
                 Id = technology.Id,
                 Price = technology.Price,
                 Package = technology.Package
-            } : null,
+            },
             PaintId = o.PaintId,
-            Paint = paint != null ? new PaintColorDTO
+            Paint = new PaintColorDTO
             {
                 Id = paint.Id,
                 Price = paint.Price,
                 Color = paint.Color
-            } : null,
+            },
             InteriorId = o.InteriorId,
-            Interior = interior != null ? new InteriorDTO
+            Interior = new InteriorDTO
             {
                 Id = interior.Id,
                 Price = interior.Price,
                 Material = interior.Material
-            } : null
+            }
         };
     }).ToList();
 
     return orderDTOs;
+});
+
+app.MapPost("orders", (Order order) => 
+{
+    // Get all the data to check that the ids for the order are valid
+    Wheels wheel = wheels.FirstOrDefault(w => w.Id == order.WheelId);
+    Technology technology = technologies.FirstOrDefault(t => t.Id == order.TechnologyId);
+    PaintColor paint = paintColors.FirstOrDefault(c => c.Id == order.PaintId);
+    Interior interior = interiors.FirstOrDefault(i => i.Id == order.InteriorId);
+
+    // if the client did not provide a valid, this is a bad request
+    if (wheel == null)
+    {
+        return Results.BadRequest("Invalid Wheel ID provided.");
+    }
+    if (technology == null)
+    {
+        return Results.BadRequest("Invalid Technology ID provided.");
+    }
+    if (paint == null)
+    {
+        return Results.BadRequest("Invalid Paint ID provided.");
+    }
+    if (interior == null)
+    {
+        return Results.BadRequest("Invalid Interior ID provided.");
+    }
+
+    //Create a new Id for the order
+    order.Id = orders.Max(o => o.Id) + 1;
+    order.Timestamp = DateTime.Now;
+    orders.Add(order);
+
+    return Results.Created($"/orders/{order.Id}", new OrderDTO
+    {
+        Id = order.Id,
+        Timestamp = order.Timestamp,
+        WheelId = order.WheelId,
+        Wheels = new WheelsDTO
+        {
+            Id = wheel.Id,
+            Price = wheel.Price,
+            Style = wheel.Style
+        },
+        TechnologyId = order.TechnologyId,
+        Technology = new TechnologyDTO
+        {
+            Id = technology.Id,
+            Price = technology.Price,
+            Package = technology.Package
+        },
+        PaintId = order.PaintId,
+        Paint = new PaintColorDTO
+        {
+            Id = paint.Id,
+            Price = paint.Price,
+            Color = paint.Color
+        },
+        InteriorId = order.InteriorId,
+        Interior = new InteriorDTO
+        {
+            Id = interior.Id,
+            Price = interior.Price,
+            Material = interior.Material
+        }
+    });
 });
 
 app.Run();
