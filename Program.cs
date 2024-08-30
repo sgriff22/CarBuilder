@@ -107,7 +107,7 @@ app.MapGet("/wheels", () =>
 
 app.MapGet("/orders", () => 
 {
-    List<OrderDTO> orderDTOs = orders.Select(o => 
+    List<OrderDTO> orderDTOs = orders.Where(o => !o.Fulfilled).Select(o => 
     {
         Wheels wheel = wheels.FirstOrDefault(w => w.Id == o.WheelId);
         Technology technology = technologies.FirstOrDefault(t => t.Id == o.TechnologyId);
@@ -145,7 +145,8 @@ app.MapGet("/orders", () =>
                 Id = interior.Id,
                 Price = interior.Price,
                 Material = interior.Material
-            }
+            },
+            Fulfilled = o.Fulfilled
         };
     }).ToList();
 
@@ -216,6 +217,24 @@ app.MapPost("orders", (Order order) =>
             Material = interior.Material
         }
     });
+});
+
+app.MapPost("/orders/{orderId}/fulfill", (int orderId) =>
+{
+    Order orderToComplete = orders.FirstOrDefault(o => o.Id == orderId);
+
+    if (orderToComplete  == null)
+    {
+        return Results.NotFound();
+    }
+    if (orderToComplete.Fulfilled == true)
+    {
+        return Results.BadRequest("Order is already fulfilled.");
+    }
+
+    orderToComplete.Fulfilled = true;
+
+    return Results.NoContent();
 });
 
 app.Run();

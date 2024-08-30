@@ -12,4 +12,5 @@ public class Order
     public PaintColor Paint { get; set; }
     public int InteriorId { get; set; }
     public Interior Interior { get; set; }
+    public bool Fulfilled { get; set; }
 }
