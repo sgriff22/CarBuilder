@@ -12,4 +12,11 @@ public class OrderDTO
     public PaintColorDTO Paint { get; set; }
     public int InteriorId { get; set; }
     public InteriorDTO Interior { get; set; }
+    public decimal TotalCost
+    {
+        get
+        {
+            return Wheels.Price + Technology.Price + Paint.Price + Interior.Price;
+        }
+    }
 }
